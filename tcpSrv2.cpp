@@ -76,3 +76,61 @@ int main()
     system("pause");
     return 0;
 }
+
+//客户端
+
+#include <iostream>
+#include <WinSock2.h>
+
+#pragma comment(lib, "ws2_32.lib")
+
+int main()
+{
+    //初始化套接字库
+    WORD wVersion;
+    WSADATA wsaData;
+    int err;
+
+    wVersion = MAKEWORD(1, 1);              //初始化套接字库版本
+    err = WSAStartup(wVersion, &wsaData);   //返回接收初始化结果
+    if (err != 0)
+    {
+        return err;
+    }
+    if (LOBYTE(wsaData.wVersion) != 1 || HIBYTE(wsaData.wVersion) != 1) //判断套接字高位与低位是否合法
+    {
+        //清理套接字库
+        WSACleanup();
+        return -1;
+    }
+
+    //创建TCP套接字
+    SOCKET sockCli = socket(AF_INET, SOCK_STREAM, 0);
+
+    SOCKADDR_IN addrSrv;
+    addrSrv.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+    addrSrv.sin_port = htons(6000);
+    addrSrv.sin_family = AF_INET;
+
+    //连接服务器
+    connect(sockCli, (SOCKADDR*)&addrSrv, sizeof(SOCKADDR));
+
+    char sendBuf[] = "world";
+    char recvBuf[100];
+
+    //发送数据到服务器
+    send(sockCli, sendBuf, strlen(sendBuf) + 1, 0);
+
+    //接收服务器返回的数据
+    recv(sockCli, recvBuf, sizeof(recvBuf), 0);
+
+    std::cout << recvBuf << std::endl;
+
+    //关闭并清理套接字库
+    closesocket(sockCli);
+    WSACleanup();
+
+
+    system("pause");
+    return 0;
+}
